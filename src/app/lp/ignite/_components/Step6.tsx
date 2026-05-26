@@ -13,11 +13,12 @@ export default function Step6() {
   const [countdown, setCountdown] = useState(4 * 60 + 59);
 
   useEffect(() => {
+    if (!hydrated) return;
     const id = setInterval(() => {
       setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [hydrated]);
 
   if (!hydrated) return null;
 

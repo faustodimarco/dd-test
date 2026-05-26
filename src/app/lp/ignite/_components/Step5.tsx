@@ -128,7 +128,8 @@ export default function Step5({ onNext, onBack }: Props) {
           </button>
           <button
             onClick={onNext}
-            className="flex-[3] btn-purple py-4 text-lg font-black uppercase tracking-wide rounded-xl"
+            disabled={!state.voice || !state.personality}
+            className="flex-[3] btn-purple py-4 text-lg font-black uppercase tracking-wide rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
           >
             FINISH HER &#x2192;
           </button>
@@ -153,9 +154,9 @@ export default function Step5({ onNext, onBack }: Props) {
           <div className="flex flex-wrap gap-1 justify-center mb-4">
             {[state.style, state.ethnicity, state.personality, state.relationship]
               .filter(Boolean)
-              .map((chip, i) => (
+              .map((chip) => (
                 <span
-                  key={i}
+                  key={chip}
                   className="bg-purple-900/40 text-purple-300 text-xs px-2 py-0.5 rounded-full capitalize"
                 >
                   {chip}

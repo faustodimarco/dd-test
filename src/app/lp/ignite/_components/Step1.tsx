@@ -4,7 +4,6 @@ import { useFunnelState } from '@/lib/useFunnelState';
 import { DEFAULT_FUNNEL_D, FunnelDState } from '@/lib/types';
 import { STYLE_IMAGES } from '@/lib/assets';
 import ProgressPills from '@/components/ProgressPills';
-import GenderTabs from '@/components/GenderTabs';
 import PhotoCard from '@/components/PhotoCard';
 
 interface Props { onNext: () => void }
@@ -30,13 +29,7 @@ export default function Step1({ onNext }: Props) {
         Join 50M+ who already have their perfect AI companion
       </p>
 
-      <GenderTabs
-        value={state.gender}
-        onChange={(g) => update({ gender: g })}
-        theme="purple"
-      />
-
-      <div className="grid grid-cols-2 gap-4 w-full mb-8">
+<div className="grid grid-cols-2 gap-4 w-full mb-8">
         {(Object.entries(STYLE_IMAGES) as Array<[keyof typeof STYLE_IMAGES, string]>).map(([key, url]) => {
           const label = key.charAt(0).toUpperCase() + key.slice(1);
           return (

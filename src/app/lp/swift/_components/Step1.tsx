@@ -5,7 +5,6 @@ import { useFunnelState } from '@/lib/useFunnelState';
 import { DEFAULT_FUNNEL_C, FunnelCState } from '@/lib/types';
 import { LOGO_URL, STYLE_IMAGES } from '@/lib/assets';
 import ProgressDots from '@/components/ProgressDots';
-import GenderTabs from '@/components/GenderTabs';
 import PhotoCard from '@/components/PhotoCard';
 
 interface Props { onNext: () => void }
@@ -40,13 +39,7 @@ export default function Step1({ onNext }: Props) {
         BUILD YOUR AI SLUT
       </h1>
 
-      <GenderTabs
-        value={state.gender}
-        onChange={(g) => update({ gender: g })}
-        theme="pink"
-      />
-
-      {/* Style cards */}
+{/* Style cards */}
       <div className="grid grid-cols-2 gap-4 w-full mb-8">
         {(Object.keys(STYLE_IMAGES) as Array<keyof typeof STYLE_IMAGES>).map((key) => {
           const label = key.charAt(0).toUpperCase() + key.slice(1);

@@ -11,7 +11,9 @@ import PhotoCard from '@/components/PhotoCard';
 interface Props { onNext: () => void }
 
 export default function Step1({ onNext }: Props) {
-  const { state, update } = useFunnelState<FunnelCState>('funnel_c', DEFAULT_FUNNEL_C);
+  const { state, update, hydrated } = useFunnelState<FunnelCState>('funnel_c', DEFAULT_FUNNEL_C);
+
+  if (!hydrated) return null;
 
   return (
     <motion.div

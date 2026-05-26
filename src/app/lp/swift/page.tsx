@@ -17,7 +17,7 @@ function SwiftFunnelContent() {
     <StepLayout theme="pink">
       {step === 1 && <Step1 onNext={() => goTo(2)} />}
       {step === 2 && <Step2 onNext={() => goTo(3)} onBack={() => goTo(1)} />}
-      {step === 3 && <Step3 onBack={() => goTo(2)} />}
+      {step === 3 && <Step3 />}
     </StepLayout>
   );
 }

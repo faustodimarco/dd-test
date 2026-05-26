@@ -7,25 +7,19 @@ import { DEFAULT_FUNNEL_C, FunnelCState } from '@/lib/types';
 import { STYLE_IMAGES } from '@/lib/assets';
 import { getAutoName } from '@/lib/names';
 
-interface Props { onBack: () => void }
-
-export default function Step3({ onBack }: Props) {
-  const { state, update } = useFunnelState<FunnelCState>('funnel_c', DEFAULT_FUNNEL_C);
+export default function Step3() {
+  const { state, update, hydrated } = useFunnelState<FunnelCState>('funnel_c', DEFAULT_FUNNEL_C);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Generate name on mount if not already set
   useEffect(() => {
-    if (!state.name) {
+    if (hydrated && !state.name) {
       update({ name: getAutoName(state.ethnicity) });
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hydrated]); // runs once after localStorage is loaded
 
   const bgImage = STYLE_IMAGES[state.style as keyof typeof STYLE_IMAGES] ?? STYLE_IMAGES.realistic;
   const characterName = state.name || getAutoName(state.ethnicity);
-
-  // Suppress unused variable warning — onBack is available for wiring if needed
-  void onBack;
 
   return (
     <div className="fixed inset-0 overflow-hidden">

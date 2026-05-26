@@ -2,8 +2,8 @@
 
 interface StepLayoutProps {
   children: React.ReactNode;
-  theme: 'pink' | 'purple';
-  showTrustBar?: boolean;
+  theme?: 'pink' | 'purple'; // reserved for future use; child components receive theme directly
+  showTrustBar?: boolean;     // TrustBar is rendered by the page wrapper, not StepLayout
 }
 
 export default function StepLayout({ children }: StepLayoutProps) {

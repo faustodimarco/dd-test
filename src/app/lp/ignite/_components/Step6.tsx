@@ -120,7 +120,7 @@ export default function Step6() {
             className="btn-purple w-full py-4 text-lg font-black uppercase tracking-wide rounded-xl mb-4"
             style={{ animation: 'pulse-purple 2s ease-in-out infinite' }}
           >
-            UNLOCK {characterName.toUpperCase()} NOW &#x2192;
+            {`UNLOCK ${characterName.toUpperCase()} NOW →`}
           </button>
 
           {/* Fine print */}

@@ -2,7 +2,7 @@
 
 :root {
   --accent-pink: #EC4899;
-  --accent-purple: #8B5CF6;
+  --accent-purple: #A020F0;
   --bg-dark: #0D0D0D;
   --bg-card: #1a1a2a;
 }
@@ -24,8 +24,8 @@ body {
 }
 
 @keyframes pulse-purple {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
-  50% { opacity: 0.9; box-shadow: 0 0 0 8px rgba(139, 92, 246, 0); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(160, 32, 240, 0.5); }
+  50% { opacity: 0.9; box-shadow: 0 0 0 10px rgba(160, 32, 240, 0); }
 }
 
 .btn-pink {

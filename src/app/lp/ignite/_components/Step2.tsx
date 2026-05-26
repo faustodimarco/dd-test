@@ -43,7 +43,7 @@ export default function Step2({ onNext, onBack }: Props) {
               onClick={() => update({ control: value })}
               className={`flex items-center gap-4 rounded-2xl p-5 border-2 transition-all duration-200 cursor-pointer w-full text-left ${
                 selected
-                  ? 'border-purple-500 bg-[#1a1a2e]'
+                  ? 'border-[#A020F0] bg-[#1a1a2e]'
                   : 'border-gray-700 bg-[#1a1a2e] hover:border-gray-500'
               }`}
             >
@@ -54,7 +54,7 @@ export default function Step2({ onNext, onBack }: Props) {
               </div>
               <div
                 className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                  selected ? 'bg-purple-600 border-purple-400' : 'border-gray-600 bg-transparent'
+                  selected ? 'bg-[#A020F0] border-[#C050FF]' : 'border-gray-600 bg-transparent'
                 }`}
               >
                 {selected && <span className="text-white text-xs font-bold">&#10003;</span>}

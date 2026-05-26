@@ -25,11 +25,11 @@ export default function ProgressPills({
                 isActive
                   ? theme === 'pink'
                     ? 'bg-pink-500 text-white'
-                    : 'bg-purple-500 text-white'
+                    : 'bg-[#A020F0] text-white'
                   : isPast
                   ? theme === 'pink'
                     ? 'bg-pink-500/40 text-pink-300'
-                    : 'bg-purple-500/40 text-purple-300'
+                    : 'bg-[#A020F0]/40 text-[#C060FF]'
                   : 'bg-gray-700 text-gray-400'
               }`}
             >

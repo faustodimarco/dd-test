@@ -15,15 +15,13 @@ export default function TrustBar() {
   const ss = String(seconds % 60).padStart(2, '0');
 
   return (
-    <div className="w-full bg-[#1a1a2e] border-b border-purple-900/50 px-4 py-2 flex items-center justify-between text-xs sticky top-0 z-50">
-      <div className="text-yellow-400 font-medium hidden sm:block">
+    <div className="w-full bg-[#1a1a2e] border-b border-[#A020F0]/30 px-4 py-2 flex items-center justify-center gap-4 text-xs sticky top-0 z-50">
+      <div className="text-yellow-400 font-medium hidden sm:flex items-center gap-1">
         &#9733;&#9733;&#9733;&#9733;&#9733;{' '}
         <span className="text-white">4.8 &middot; 50M+ Users &middot; #1 AI Companion App</span>
       </div>
-      <div className="text-yellow-400 font-medium sm:hidden">
-        &#9733;&#9733;&#9733;&#9733;&#9733; 4.8
-      </div>
-      <div className="text-white font-semibold">
+      <div className="text-gray-600 hidden sm:block">&middot;</div>
+      <div className="text-white font-semibold text-center">
         &#128293; First Month 70% OFF &mdash; Ends in{' '}
         <span className="text-pink-400">
           {mm}:{ss}

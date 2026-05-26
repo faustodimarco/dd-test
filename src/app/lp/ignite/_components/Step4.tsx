@@ -73,13 +73,13 @@ export default function Step4() {
       <ProgressPills current={4} total={4} theme="purple" />
 
       {/* Urgency bar */}
-      <div className="w-full bg-purple-900/30 border border-purple-700/40 rounded-xl px-4 py-2 text-center text-xs text-purple-300 mb-5">
+      <div className="w-full bg-[#A020F0]/15 border border-[#A020F0]/40 rounded-xl px-4 py-2 text-center text-xs text-[#C060FF] mb-5">
         🔥 <strong>1,847 people</strong> just created their AI companion — your match is ready
       </div>
 
       {/* Avatar */}
       <div className="relative mb-4">
-        <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-purple-500 ring-offset-2 ring-offset-[#0D0D0D]">
+        <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-[#A020F0] ring-offset-2 ring-offset-[#0D0D0D]">
           <Image src={avatarSrc} alt={name} width={96} height={96} className="object-cover w-full h-full" />
         </div>
         <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-[#0D0D0D]" />

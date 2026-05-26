@@ -24,7 +24,7 @@ export default function PhotoCard({
   const ringColor = selected
     ? theme === 'pink'
       ? 'ring-pink-500'
-      : 'ring-purple-500'
+      : 'ring-[#A020F0]'
     : 'ring-transparent';
 
   return (

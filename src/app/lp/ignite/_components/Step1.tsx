@@ -59,7 +59,7 @@ export default function Step1({ onNext }: Props) {
               onClick={() => toggle(label)}
               className={`flex flex-col items-center justify-center gap-1 rounded-xl py-3 px-2 border-2 transition-all duration-200 cursor-pointer ${
                 selected
-                  ? 'border-purple-500 bg-[#1a1a2e]'
+                  ? 'border-[#A020F0] bg-[#1a1a2e]'
                   : 'border-gray-700 bg-[#1a1a2e] hover:border-gray-500'
               }`}
             >

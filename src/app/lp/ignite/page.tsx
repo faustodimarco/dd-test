@@ -17,8 +17,7 @@ function IgniteFunnelContent() {
   const goTo = (n: number) => router.push(`/lp/ignite?step=${n}`);
 
   return (
-    <StepLayout theme="purple">
-      <TrustBar />
+    <StepLayout theme="purple" header={<TrustBar />}>
       {step === 1 && <Step1 onNext={() => goTo(2)} />}
       {step === 2 && <Step2 onNext={() => goTo(3)} onBack={() => goTo(1)} />}
       {step === 3 && <Step3 onNext={() => goTo(4)} onBack={() => goTo(2)} />}

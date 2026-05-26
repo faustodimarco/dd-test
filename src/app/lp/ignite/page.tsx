@@ -26,7 +26,7 @@ function IgniteFunnelContent() {
       {step === 3 && <Step3 onNext={() => goTo(4)} onBack={() => goTo(2)} />}
       {step === 4 && <Step4 onNext={() => goTo(5)} onBack={() => goTo(3)} />}
       {step === 5 && <Step5 onNext={() => goTo(6)} onBack={() => goTo(4)} />}
-      {step === 6 && <Step6 onBack={() => goTo(5)} />}
+      {step === 6 && <Step6 />}
       <LiveCounter />
     </StepLayout>
   );

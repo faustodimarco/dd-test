@@ -101,7 +101,7 @@ export default function Step5({ onNext, onBack }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {traitFields.map((field) => {
             const stateKey = FIELD_TO_KEY[field];
-            const currentValue = (state as Record<string, unknown>)[stateKey] as string ?? '';
+            const currentValue = (state as unknown as Record<string, string>)[stateKey] ?? '';
             return (
               <button
                 key={field}
@@ -179,7 +179,7 @@ export default function Step5({ onNext, onBack }: Props) {
           <PersonalityModal
             field={activeModal}
             options={PERSONALITY_OPTIONS[activeModal]}
-            value={(state as Record<string, string>)[FIELD_TO_KEY[activeModal]] ?? ''}
+            value={(state as unknown as Record<string, string>)[FIELD_TO_KEY[activeModal]] ?? ''}
             onChange={(v) => {
               update({ [FIELD_TO_KEY[activeModal]]: v } as Partial<FunnelDState>);
             }}

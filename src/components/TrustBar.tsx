@@ -24,7 +24,7 @@ export default function TrustBar() {
         &#9733;&#9733;&#9733;&#9733;&#9733; 4.8
       </div>
       <div className="text-white font-semibold">
-        &#128293; 70% OFF &mdash; Ends in{' '}
+        &#128293; First Month 70% OFF &mdash; Ends in{' '}
         <span className="text-pink-400">
           {mm}:{ss}
         </span>

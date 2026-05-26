@@ -35,7 +35,7 @@ export default function ColorSwatch({
           style={{ backgroundColor: color }}
           title={label}
         />
-        {badge && selected && (
+        {badge && (
           <div className="absolute -top-1 -right-1 text-xs">&#128293;</div>
         )}
       </div>

@@ -76,7 +76,7 @@ export default function Step3({ onBack }: Props) {
           {/* Divider */}
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-white/20" />
-            <span className="text-gray-400 text-sm">or</span>
+            <span className="text-gray-400 text-sm">— or —</span>
             <div className="flex-1 h-px bg-white/20" />
           </div>
 

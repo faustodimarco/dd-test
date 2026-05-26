@@ -43,8 +43,8 @@ export const DEFAULT_FUNNEL_D: FunnelDState = {
   gender: 'female',
   ethnicity: '',
   skinTone: '#F2C4B0',
-  eyeColor: 'Blue',
-  hairColor: 'Black',
+  eyeColor: '#4169E1',   // Blue hex (matches EYE_COLORS array)
+  hairColor: '#1a1a2e',  // Black hex (matches HAIR_COLORS array)
   hairStyle: 'long',
   bodyType: '',
   breastSize: 'medium',

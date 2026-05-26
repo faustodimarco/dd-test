@@ -1,13 +1,16 @@
 'use client';
 import { motion } from 'framer-motion';
 import { useFunnelState } from '@/lib/useFunnelState';
-import { DEFAULT_FUNNEL_D, FunnelDState } from '@/lib/types';
-import { ETHNICITY_IMAGES, SKIN_TONES } from '@/lib/assets';
+import { DEFAULT_FUNNEL_D, FunnelDState, ControlDynamic } from '@/lib/types';
 import ProgressPills from '@/components/ProgressPills';
-import PhotoCard from '@/components/PhotoCard';
-import ColorSwatch from '@/components/ColorSwatch';
 
 interface Props { onNext: () => void; onBack: () => void }
+
+const OPTIONS: { value: ControlDynamic; emoji: string; title: string; sub: string }[] = [
+  { value: 'dom', emoji: '👑', title: "YOU DOMINATE", sub: "She obeys every command. Completely yours." },
+  { value: 'sub', emoji: '🔥', title: "SHE DOMINATES", sub: "She takes total control. You belong to her." },
+  { value: 'both', emoji: '⚡', title: "BOTH GO WILD", sub: "No rules. Pure filth. Equal chaos." },
+];
 
 export default function Step2({ onNext, onBack }: Props) {
   const { state, update, hydrated } = useFunnelState<FunnelDState>('funnel_d', DEFAULT_FUNNEL_D);
@@ -19,65 +22,61 @@ export default function Step2({ onNext, onBack }: Props) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex flex-col"
+      className="flex flex-col items-center"
     >
-      <ProgressPills current={2} total={6} theme="purple" />
+      <ProgressPills current={2} total={4} theme="purple" />
 
-      <h1 className="text-3xl sm:text-4xl font-black uppercase text-white text-center mb-6 tracking-tight">
-        WHAT DOES SHE LOOK LIKE?
+      <h1 className="text-3xl sm:text-4xl font-black uppercase text-white text-center mb-2 tracking-tight">
+        WHO&apos;S IN CONTROL?
       </h1>
+      <p className="text-gray-400 text-center text-sm mb-6">
+        Set the power dynamic. She&apos;ll act accordingly.
+      </p>
 
-      {/* Ethnicity */}
-      <p className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-3">Ethnicity</p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-        {(Object.entries(ETHNICITY_IMAGES) as Array<[keyof typeof ETHNICITY_IMAGES, string]>).map(([key, url]) => {
-          const label = key.charAt(0).toUpperCase() + key.slice(1);
+      <div className="flex flex-col gap-3 w-full mb-8">
+        {OPTIONS.map(({ value, emoji, title, sub }) => {
+          const selected = state.control === value;
           return (
-            <PhotoCard
-              key={key}
-              src={url}
-              alt={label}
-              label={label}
-              selected={state.ethnicity === key}
-              onClick={() => update({ ethnicity: key })}
-              badge={key === 'white' ? '🔥 Most Popular' : undefined}
-              theme="purple"
-            />
+            <motion.button
+              key={value}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => update({ control: value })}
+              className={`flex items-center gap-4 rounded-2xl p-5 border-2 transition-all duration-200 cursor-pointer w-full text-left ${
+                selected
+                  ? 'border-purple-500 bg-[#1a1a2e]'
+                  : 'border-gray-700 bg-[#1a1a2e] hover:border-gray-500'
+              }`}
+            >
+              <span className="text-3xl flex-shrink-0">{emoji}</span>
+              <div className="flex-1">
+                <div className="text-white text-base font-black uppercase tracking-wide">{title}</div>
+                <div className="text-gray-400 text-xs mt-1">{sub}</div>
+              </div>
+              <div
+                className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                  selected ? 'bg-purple-600 border-purple-400' : 'border-gray-600 bg-transparent'
+                }`}
+              >
+                {selected && <span className="text-white text-xs font-bold">&#10003;</span>}
+              </div>
+            </motion.button>
           );
         })}
       </div>
 
-      {/* Skin Tone */}
-      <p className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-3">Skin Tone</p>
-      <div className="flex flex-wrap gap-3 mb-8">
-        {SKIN_TONES.map((tone) => (
-          <ColorSwatch
-            key={tone.hex}
-            color={tone.hex}
-            label={tone.label}
-            selected={state.skinTone === tone.hex}
-            onClick={() => update({ skinTone: tone.hex })}
-            theme="purple"
-          />
-        ))}
-      </div>
-
-      {/* Navigation */}
-      <div className="flex gap-3">
-        <button
-          onClick={onBack}
-          className="flex-1 py-4 text-white border border-white/20 rounded-xl font-bold uppercase tracking-wide hover:bg-white/5 transition-colors"
-        >
-          &#x2190; Back
-        </button>
-        <button
-          onClick={onNext}
-          disabled={!state.ethnicity}
-          className="flex-[3] btn-purple py-4 text-lg font-black uppercase tracking-wide rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          NEXT &#x2192;
-        </button>
-      </div>
+      <button
+        onClick={onNext}
+        disabled={!state.control}
+        className="btn-purple w-full py-4 text-lg font-black uppercase tracking-wide rounded-xl disabled:opacity-40 disabled:cursor-not-allowed mb-3"
+      >
+        NEXT &#x2192;
+      </button>
+      <button
+        onClick={onBack}
+        className="w-full py-3 text-gray-500 text-sm font-medium hover:text-gray-300 transition-colors"
+      >
+        &#x2190; Back
+      </button>
     </motion.div>
   );
 }

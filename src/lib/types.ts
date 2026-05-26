@@ -9,25 +9,12 @@ export interface FunnelCState {
   name: string;
 }
 
+export type ControlDynamic = 'dom' | 'sub' | 'both' | '';
+
 export interface FunnelDState {
-  style: Style;
-  gender: Gender;
+  kinks: string[];
+  control: ControlDynamic;
   ethnicity: string;
-  skinTone: string;
-  eyeColor: string;
-  hairColor: string;
-  hairStyle: string;
-  bodyType: string;
-  breastSize: string;
-  buttSize: string;
-  name: string;
-  age: number;
-  voice: string;
-  personality: string;
-  occupation: string;
-  relationship: string;
-  hobby: string;
-  fetish: string;
 }
 
 export const DEFAULT_FUNNEL_C: FunnelCState = {
@@ -39,22 +26,7 @@ export const DEFAULT_FUNNEL_C: FunnelCState = {
 };
 
 export const DEFAULT_FUNNEL_D: FunnelDState = {
-  style: 'realistic',
-  gender: 'female',
+  kinks: [],
+  control: '',
   ethnicity: '',
-  skinTone: '#F2C4B0',
-  eyeColor: '#4169E1',   // Blue hex (matches EYE_COLORS array)
-  hairColor: '#1a1a2e',  // Black hex (matches HAIR_COLORS array)
-  hairStyle: 'long',
-  bodyType: '',
-  breastSize: 'medium',
-  buttSize: 'medium',
-  name: '',
-  age: 23,
-  voice: 'Avery',
-  personality: 'Shy',
-  occupation: 'Stripper',
-  relationship: 'Crush',
-  hobby: '',
-  fetish: '',
 };

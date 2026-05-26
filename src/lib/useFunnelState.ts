@@ -9,7 +9,7 @@ export function useFunnelState<T>(key: string, initial: T) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(key);
-      if (stored) setState(JSON.parse(stored) as T);
+      if (stored) setState({ ...initial, ...(JSON.parse(stored) as Partial<T>) });
     } catch {
       // ignore
     }

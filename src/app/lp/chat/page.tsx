@@ -9,6 +9,7 @@ import TypingIndicator from './_components/TypingIndicator';
 interface Msg {
   id: number;
   from: 'her' | 'you';
+  girlId?: string; // which girl in a group chat
   text: string;
   time: string;
   locked?: boolean;
@@ -21,10 +22,55 @@ interface Girl {
   unread: number;
   preview: string;
   messages: Msg[];
+  isGroup?: boolean;
+  groupAvatars?: string[]; // for overlapping avatar display
 }
+
+// ── Avatar map (used for group bubble lookup) ─────────────────────────────
+const GIRL_META: Record<string, { name: string; avatar: string }> = {
+  sofia:   { name: 'Sofia',   avatar: ETHNICITY_IMAGES.latina },
+  yuki:    { name: 'Yuki',    avatar: ETHNICITY_IMAGES.asian  },
+  destiny: { name: 'Destiny', avatar: ETHNICITY_IMAGES.black  },
+  ashley:  { name: 'Ashley',  avatar: ETHNICITY_IMAGES.white  },
+  layla:   { name: 'Layla',   avatar: ETHNICITY_IMAGES.arab   },
+};
 
 // ── Conversation data ──────────────────────────────────────────────────────
 const SEED: Girl[] = [
+  // ── GROUP CHAT (pinned first) ──────────────────────────────────────────
+  {
+    id: 'group',
+    name: 'All Girls 🔥',
+    age: 0,
+    avatar: '',
+    unread: 9,
+    preview: 'Can we have a BDSM session all together? 😈',
+    isGroup: true,
+    groupAvatars: [
+      ETHNICITY_IMAGES.latina,
+      ETHNICITY_IMAGES.asian,
+      ETHNICITY_IMAGES.black,
+      ETHNICITY_IMAGES.white,
+    ],
+    messages: [
+      { id: 1,  from: 'her', girlId: 'sofia',   text: "I've been thinking… what if we all had you together tonight? 👀", time: '10:00 PM' },
+      { id: 2,  from: 'her', girlId: 'ashley',  text: "OMG yes. I've literally been wanting this for SO long 🔥", time: '10:01 PM' },
+      { id: 3,  from: 'her', girlId: 'yuki',    text: "Can we have a BDSM session all together? I want to be tied up and blindfolded while you decide what you do to me 😈", time: '10:02 PM' },
+      { id: 4,  from: 'her', girlId: 'sofia',   text: "I want you to fuck me in the ass while Yuki is licking my pussy 😩", time: '10:03 PM' },
+      { id: 5,  from: 'her', girlId: 'destiny', text: "And I'll be standing behind you, telling you exactly how hard to go. Every. Single. Time. 👑", time: '10:04 PM' },
+      { id: 6,  from: 'her', girlId: 'layla',   text: "I need you in my mouth while the others take turns with you. Right now. 🥵", time: '10:05 PM' },
+      { id: 7,  from: 'her', girlId: 'ashley',  text: "I'll tie Sofia's wrists to the headboard while you do whatever you want to her 🔗", time: '10:06 PM' },
+      { id: 8,  from: 'her', girlId: 'yuki',    text: "Can I be the one in the middle? I want all of you touching me at the same time… please 🥺", time: '10:07 PM' },
+      { id: 9,  from: 'you', text: "You're all going to do exactly what I say. Every single one of you.", time: '10:08 PM' },
+      { id: 10, from: 'her', girlId: 'destiny', text: "Yes daddy 😈 we're all ready and waiting for you right now…", time: '10:09 PM' },
+      { id: 11, from: 'her', girlId: 'sofia',   text: "Make me beg in front of all of them. I want them to watch while you use me. 😈", time: '10:10 PM', locked: true },
+      { id: 12, from: 'her', girlId: 'ashley',  text: "Tell us exactly what position you want each of us in and we'll be there instantly 🙏", time: '10:11 PM', locked: true },
+      { id: 13, from: 'her', girlId: 'layla',   text: "I'm already on my knees. We all are. Just say when. 🥵", time: '10:12 PM', locked: true },
+      { id: 14, from: 'her', girlId: 'yuki',    text: "I brought the restraints. Ashley has the blindfolds. Sofia picked the safe word 🔗😈", time: '10:13 PM', locked: true },
+    ],
+  },
+
+  // ── Individual chats ───────────────────────────────────────────────────
   {
     id: 'sofia',
     name: 'Sofia',
@@ -116,7 +162,7 @@ const SEED: Girl[] = [
   },
 ];
 
-// ── Countdown hook ─────────────────────────────────────────────────────────
+// ── Countdown ──────────────────────────────────────────────────────────────
 function useCountdown(initial: number) {
   const [secs, setSecs] = useState(initial);
   useEffect(() => {
@@ -128,25 +174,74 @@ function useCountdown(initial: number) {
   return `${m}:${s}`;
 }
 
+// ── Group avatar stack ─────────────────────────────────────────────────────
+function GroupAvatarStack({ avatars, isActive }: { avatars: string[]; isActive: boolean }) {
+  const shown = avatars.slice(0, 4);
+  return (
+    <div className="relative flex-shrink-0" style={{ width: 52, height: 52 }}>
+      {shown.map((src, i) => (
+        <div
+          key={i}
+          className={`absolute rounded-full overflow-hidden ring-2 ${isActive ? 'ring-pink-500' : 'ring-gray-800'} bg-gray-900`}
+          style={{
+            width: 28,
+            height: 28,
+            top: i < 2 ? 0 : 24,
+            left: i % 2 === 0 ? 0 : 22,
+            zIndex: shown.length - i,
+          }}
+        >
+          <Image src={src} alt="" width={28} height={28} className="object-cover w-full h-full" />
+        </div>
+      ))}
+      {/* online dot */}
+      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#0D0D0D] z-10" />
+    </div>
+  );
+}
+
 // ── Bubble ─────────────────────────────────────────────────────────────────
-function Bubble({ msg }: { msg: Msg }) {
+function Bubble({
+  msg,
+  isGroup,
+}: {
+  msg: Msg;
+  isGroup?: boolean;
+}) {
   const isHer = msg.from === 'her';
+  const meta = isGroup && msg.girlId ? GIRL_META[msg.girlId] : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className={`flex ${isHer ? 'justify-start' : 'justify-end'}`}
+      className={`flex ${isHer ? 'justify-start' : 'justify-end'} items-end gap-2`}
     >
-      <div
-        className={`max-w-[78%] px-4 py-2.5 rounded-2xl ${
-          isHer
-            ? 'bg-[#1e1e2e] text-white rounded-tl-sm'
-            : 'bg-pink-500 text-white rounded-tr-sm'
-        }`}
-      >
-        <p className="text-sm leading-relaxed">{msg.text}</p>
-        <p className={`text-[10px] mt-1 ${isHer ? 'text-gray-500' : 'text-pink-200'}`}>{msg.time}</p>
+      {/* Group: small avatar left of bubble */}
+      {isGroup && isHer && meta && (
+        <div className="flex-shrink-0 self-end mb-1">
+          <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-gray-700">
+            <Image src={meta.avatar} alt={meta.name} width={28} height={28} className="object-cover w-full h-full" />
+          </div>
+        </div>
+      )}
+
+      <div className={`max-w-[75%] ${isGroup && isHer ? 'max-w-[70%]' : ''}`}>
+        {/* Group: sender name above bubble */}
+        {isGroup && isHer && meta && (
+          <p className="text-pink-400 text-[10px] font-bold mb-1 ml-1">{meta.name}</p>
+        )}
+        <div
+          className={`px-4 py-2.5 rounded-2xl ${
+            isHer
+              ? 'bg-[#1e1e2e] text-white rounded-tl-sm'
+              : 'bg-pink-500 text-white rounded-tr-sm'
+          }`}
+        >
+          <p className="text-sm leading-relaxed">{msg.text}</p>
+          <p className={`text-[10px] mt-1 ${isHer ? 'text-gray-500' : 'text-pink-200'}`}>{msg.time}</p>
+        </div>
       </div>
     </motion.div>
   );
@@ -162,17 +257,26 @@ function GirlItem({ girl, isActive, onClick }: { girl: Girl; isActive: boolean; 
         isActive ? 'bg-pink-500/10' : 'hover:bg-white/[0.03]'
       }`}
     >
-      <div className="relative flex-shrink-0">
-        <div className={`w-13 h-13 rounded-full overflow-hidden ring-2 ${isActive ? 'ring-pink-500' : 'ring-gray-700'}`}
-          style={{ width: 52, height: 52 }}>
-          <Image src={girl.avatar} alt={girl.name} width={52} height={52} className="object-cover w-full h-full" />
+      {/* Avatar — group or single */}
+      {girl.isGroup && girl.groupAvatars ? (
+        <GroupAvatarStack avatars={girl.groupAvatars} isActive={isActive} />
+      ) : (
+        <div className="relative flex-shrink-0">
+          <div
+            className={`rounded-full overflow-hidden ring-2 ${isActive ? 'ring-pink-500' : 'ring-gray-700'}`}
+            style={{ width: 52, height: 52 }}
+          >
+            <Image src={girl.avatar} alt={girl.name} width={52} height={52} className="object-cover w-full h-full" />
+          </div>
+          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#0D0D0D]" />
         </div>
-        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#0D0D0D]" />
-      </div>
+      )}
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">
-          <span className="text-white font-bold text-sm">{girl.name}, {girl.age}</span>
+          <span className={`font-bold text-sm ${girl.isGroup ? 'text-pink-300' : 'text-white'}`}>
+            {girl.name}
+          </span>
           <span className="text-gray-500 text-[10px]">now</span>
         </div>
         <p className="text-gray-400 text-xs truncate">{girl.preview}</p>
@@ -215,36 +319,41 @@ function ChatWindow({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Chat header */}
+      {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800 bg-[#111] flex-shrink-0">
-        <button
-          onClick={onBack}
-          className="md:hidden text-gray-400 text-lg mr-1 leading-none"
-        >
-          ‹
-        </button>
-        <div className="relative">
-          <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-pink-500/50">
-            <Image src={girl.avatar} alt={girl.name} width={40} height={40} className="object-cover w-full h-full" />
+        <button onClick={onBack} className="md:hidden text-gray-400 text-xl mr-1 leading-none">‹</button>
+
+        {girl.isGroup && girl.groupAvatars ? (
+          <GroupAvatarStack avatars={girl.groupAvatars} isActive />
+        ) : (
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-pink-500/50">
+              <Image src={girl.avatar} alt={girl.name} width={40} height={40} className="object-cover w-full h-full" />
+            </div>
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#111]" />
           </div>
-          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#111]" />
-        </div>
+        )}
+
         <div className="flex-1 min-w-0">
-          <div className="text-white font-black text-sm">{girl.name}, {girl.age}</div>
-          <div className="text-green-400 text-[11px] font-medium">● Active now</div>
+          <div className={`font-black text-sm ${girl.isGroup ? 'text-pink-300' : 'text-white'}`}>
+            {girl.name}
+          </div>
+          <div className="text-green-400 text-[11px] font-medium">
+            {girl.isGroup ? '● All online — waiting for you' : '● Active now'}
+          </div>
         </div>
-        <div className="text-pink-400 text-xs font-bold uppercase tracking-wide">
-          AI Companion
+
+        <div className="text-pink-400 text-xs font-bold uppercase tracking-wide flex-shrink-0">
+          {girl.isGroup ? '🔥 Group' : 'AI Companion'}
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5 min-h-0">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
         {unlocked.map((msg) => (
-          <Bubble key={msg.id} msg={msg} />
+          <Bubble key={msg.id} msg={msg} isGroup={girl.isGroup} />
         ))}
 
-        {/* Typing indicator */}
         <AnimatePresence>
           {typing && (
             <motion.div
@@ -252,8 +361,13 @@ function ChatWindow({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex justify-start"
+              className="flex justify-start items-end gap-2"
             >
+              {girl.isGroup && (
+                <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-gray-700 flex-shrink-0">
+                  <Image src={ETHNICITY_IMAGES.latina} alt="" width={28} height={28} className="object-cover" />
+                </div>
+              )}
               <div className="bg-[#1e1e2e] rounded-2xl rounded-tl-sm px-4 py-3">
                 <TypingIndicator />
               </div>
@@ -263,29 +377,26 @@ function ChatWindow({
 
         {/* Blurred locked messages */}
         {!typing && locked.length > 0 && (
-          <div className="relative mt-1 space-y-2.5">
-            <div className="blur-sm select-none pointer-events-none space-y-2.5 opacity-70">
+          <div className="relative mt-1">
+            <div className="blur-sm select-none pointer-events-none space-y-3 opacity-70">
               {locked.map((msg) => (
-                <Bubble key={msg.id} msg={msg} />
+                <Bubble key={msg.id} msg={msg} isGroup={girl.isGroup} />
               ))}
             </div>
-            {/* Gradient fade */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0D0D0D]/70 to-[#0D0D0D]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0D0D0D]/60 to-[#0D0D0D]" />
           </div>
         )}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Sign-up gate */}
+      {/* CTA gate */}
       <div className="px-4 pt-3 pb-5 border-t border-gray-800 bg-[#0D0D0D] flex-shrink-0">
         <p className="text-center text-xs text-gray-500 mb-3">
           🔒 <span className="text-gray-300 font-semibold">{locked.length} messages</span> locked — join free to read everything
         </p>
-        <button
-          className="btn-pink w-full py-4 text-base font-black uppercase tracking-wide rounded-xl mb-3"
-        >
-          UNLOCK ALL MESSAGES — FREE →
+        <button className="btn-pink w-full py-4 text-base font-black uppercase tracking-wide rounded-xl mb-3">
+          {girl.isGroup ? 'JOIN THE GROUP — FREE →' : 'UNLOCK ALL MESSAGES — FREE →'}
         </button>
         <div className="flex items-center gap-3 mb-3">
           <div className="flex-1 h-px bg-gray-800" />
@@ -332,13 +443,13 @@ export default function ChatPage() {
   const [typing, setTyping] = useState(false);
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [onlineCount, setOnlineCount] = useState(127);
-  useEffect(() => { setOnlineCount(Math.floor(Math.random() * 60) + 100); }, []);
   const countdown = useCountdown(29 * 60 + 57);
   const tickRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => { setOnlineCount(Math.floor(Math.random() * 60) + 100); }, []);
+
   const activeGirl = girls.find((g) => g.id === activeId) ?? null;
 
-  // Periodic unread bump for non-active girls
   const scheduleNext = useCallback((currentActive: string | null) => {
     const delay = Math.random() * 9000 + 7000;
     tickRef.current = setTimeout(() => {
@@ -372,7 +483,7 @@ export default function ChatPage() {
   return (
     <div className="h-screen flex flex-col bg-[#0D0D0D] overflow-hidden">
 
-      {/* ── Top bar ── */}
+      {/* Top bar */}
       <div className="flex-shrink-0 w-full bg-[#111] border-b border-pink-900/30 px-4 py-2.5 flex items-center justify-center gap-3 text-sm sticky top-0 z-50">
         <span className="text-yellow-400 text-xs">★★★★★</span>
         <span className="text-white hidden sm:inline">4.8 · 50M+ Users · #1 AI Companion App</span>
@@ -383,7 +494,7 @@ export default function ChatPage() {
         </span>
       </div>
 
-      {/* ── Online pill ── */}
+      {/* Online pill */}
       <div className="flex-shrink-0 w-full bg-pink-500/10 border-b border-pink-500/20 py-1.5 text-center text-xs text-pink-300">
         ⚡ <strong>{onlineCount} girls online</strong> and messaging right now
         {totalUnread > 0 && (
@@ -393,15 +504,11 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* ── Main layout ── */}
+      {/* Main layout */}
       <div className="flex flex-1 min-h-0">
 
-        {/* Girls list */}
-        <div
-          className={`flex-shrink-0 w-full md:w-[300px] border-r border-gray-800 flex flex-col min-h-0 ${
-            mobileShowChat ? 'hidden md:flex' : 'flex'
-          }`}
-        >
+        {/* Sidebar */}
+        <div className={`flex-shrink-0 w-full md:w-[300px] border-r border-gray-800 flex flex-col min-h-0 ${mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
           <div className="flex-shrink-0 px-4 py-3 border-b border-gray-800 flex items-center justify-between">
             <div>
               <h1 className="text-white font-black text-base">Messages</h1>
@@ -421,8 +528,6 @@ export default function ChatPage() {
               />
             ))}
           </div>
-
-          {/* Bottom promo in list */}
           <div className="flex-shrink-0 p-4 border-t border-gray-800 bg-[#0D0D0D]">
             <button className="btn-pink w-full py-3 text-sm font-black uppercase tracking-wide rounded-xl">
               JOIN FREE — TALK TO ALL OF THEM →
@@ -431,17 +536,9 @@ export default function ChatPage() {
         </div>
 
         {/* Chat panel */}
-        <div
-          className={`flex-1 flex flex-col min-h-0 ${
-            !mobileShowChat ? 'hidden md:flex' : 'flex'
-          }`}
-        >
+        <div className={`flex-1 flex flex-col min-h-0 ${!mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
           {activeGirl ? (
-            <ChatWindow
-              girl={activeGirl}
-              typing={typing}
-              onBack={() => setMobileShowChat(false)}
-            />
+            <ChatWindow girl={activeGirl} typing={typing} onBack={() => setMobileShowChat(false)} />
           ) : (
             <EmptyState />
           )}

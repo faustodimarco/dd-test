@@ -529,8 +529,8 @@ export default function ChatPage() {
             ))}
           </div>
           <div className="flex-shrink-0 p-4 border-t border-gray-800 bg-[#0D0D0D]">
-            <button className="btn-pink w-full py-3 text-sm font-black uppercase tracking-wide rounded-xl">
-              JOIN FREE — TALK TO ALL OF THEM →
+            <button className="btn-pink w-full py-3 text-sm font-black uppercase tracking-wide rounded-xl whitespace-nowrap">
+              JOIN FREE → CHAT WITH ALL
             </button>
           </div>
         </div>

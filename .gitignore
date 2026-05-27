@@ -40,3 +40,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .worktrees
+
+# Claude Code & AI tooling
+CLAUDE.md
+AGENTS.md
+.claude/
+.superpowers/
+.playwright-mcp/
+docs/
+*.png
+*.log

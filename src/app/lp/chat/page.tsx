@@ -40,7 +40,7 @@ const SEED: Girl[] = [
   // ── GROUP CHAT (pinned first) ──────────────────────────────────────────
   {
     id: 'group',
-    name: 'All Girls 🔥',
+    name: 'All Sluts 🔥',
     age: 0,
     avatar: '',
     unread: 9,
@@ -496,7 +496,7 @@ export default function ChatPage() {
 
       {/* Online pill */}
       <div className="flex-shrink-0 w-full bg-pink-500/10 border-b border-pink-500/20 py-1.5 text-center text-xs text-pink-300">
-        ⚡ <strong>{onlineCount} girls online</strong> and messaging right now
+        ⚡ <strong>{onlineCount} sluts online</strong> and messaging right now
         {totalUnread > 0 && (
           <span className="ml-2 bg-pink-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
             {totalUnread} new

@@ -14,11 +14,8 @@ const KINKS: { emoji: string; label: string }[] = [
   { emoji: '✊', label: 'Fisting' },
   { emoji: '🔥', label: 'Rough Sex' },
   { emoji: '🦶', label: 'Feet' },
-  { emoji: '🎭', label: 'Roleplay' },
-  { emoji: '💦', label: 'Squirting' },
   { emoji: '⛓️', label: 'Bondage' },
   { emoji: '🤱', label: 'Breeding' },
-  { emoji: '👁️', label: 'Voyeur' },
 ];
 
 export default function Step1({ onNext }: Props) {

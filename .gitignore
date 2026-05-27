@@ -47,6 +47,8 @@ AGENTS.md
 .claude/
 .superpowers/
 .playwright-mcp/
-docs/
+docs/*
+!docs/superpowers/
+chat.db
 *.png
 *.log

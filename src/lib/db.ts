@@ -32,6 +32,13 @@ function initSchema(db: Database.Database): void {
       FOREIGN KEY (conversation_id) REFERENCES conversations(id)
     );
   `);
+
+  // Migration: add responder_id column (no-op if already exists)
+  try {
+    db.exec('ALTER TABLE messages ADD COLUMN responder_id TEXT');
+  } catch (_) {
+    // column already exists — ignore
+  }
 }
 
 function seedConversations(db: Database.Database): void {
@@ -51,6 +58,7 @@ export interface DbMessage {
   conversation_id: string;
   role: 'user' | 'assistant';
   content: string;
+  responder_id: string | null;
   created_at: number;
 }
 
@@ -89,18 +97,25 @@ export function getAllMessages(conversationId: string): DbMessage[] {
 export function saveMessage(
   conversationId: string,
   role: 'user' | 'assistant',
-  content: string
+  content: string,
+  responderId?: string
 ): void {
   const db = getDb();
   const now = Date.now();
   db.prepare(
-    `INSERT INTO messages (conversation_id, role, content, created_at)
-     VALUES (?, ?, ?, ?)`
-  ).run(conversationId, role, content, now);
+    `INSERT INTO messages (conversation_id, role, content, responder_id, created_at)
+     VALUES (?, ?, ?, ?, ?)`
+  ).run(conversationId, role, content, responderId ?? null, now);
 
   db.prepare(
     `UPDATE conversations SET updated_at = ? WHERE id = ?`
   ).run(now, conversationId);
+}
+
+export function clearMessages(conversationId: string): void {
+  const db = getDb();
+  db.prepare('DELETE FROM messages WHERE conversation_id = ?').run(conversationId);
+  db.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').run(Date.now(), conversationId);
 }
 
 export function getConversationsList(): ConversationSummary[] {

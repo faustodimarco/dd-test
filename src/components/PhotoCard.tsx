@@ -10,6 +10,7 @@ interface PhotoCardProps {
   onClick: () => void;
   badge?: string;
   theme?: 'pink' | 'purple';
+  square?: boolean;
 }
 
 export default function PhotoCard({
@@ -20,6 +21,7 @@ export default function PhotoCard({
   onClick,
   badge,
   theme = 'pink',
+  square = false,
 }: PhotoCardProps) {
   const ringColor = selected
     ? theme === 'pink'
@@ -34,7 +36,7 @@ export default function PhotoCard({
       onClick={onClick}
       className={`relative rounded-2xl overflow-hidden bg-[#1a1a2e] cursor-pointer ring-2 transition-all duration-200 ${ringColor}`}
     >
-      <div className="aspect-[3/4] relative">
+      <div className={`${square ? 'aspect-square' : 'aspect-[3/4]'} relative`}>
         <Image
           src={src}
           alt={alt}

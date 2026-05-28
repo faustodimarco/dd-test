@@ -53,6 +53,19 @@ export const BREAST_SIZE_IMAGES = {
   xl:     cdnUrl('9051b0cf-64c1-4a03-d780-93bef4e67600'),
 } as const;
 
+// Kink Images
+export const KINK_IMAGES = {
+  'BDSM':       '/kinks/bdsm.jpg',
+  'Anal':       '/kinks/anal.jpg',
+  'Domination': '/kinks/domination.jpg',
+  'Squirting':  '/kinks/squirting.jpg',
+  'Deepthroat': '/kinks/deepthroat.jpg',
+  'Spanking':   '/kinks/spanking.jpg',
+  'Feet':       '/kinks/feet.jpg',
+  'Choking':    '/kinks/choking.jpg',
+  'Creampie':   '/kinks/creampie.jpg',
+} as const;
+
 // Butt Size
 export const BUTT_SIZE_IMAGES = {
   small:    cdnUrl('e50befed-9d97-40c3-d3e1-ff294efa5000'),

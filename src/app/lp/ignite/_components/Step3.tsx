@@ -29,7 +29,7 @@ export default function Step3({ onNext, onBack }: Props) {
         Pick her type.
       </p>
 
-      <div className="grid grid-cols-3 gap-3 w-full mb-8">
+      <div className="grid grid-cols-3 gap-2 w-full max-w-[576px] mx-auto mb-8">
         {(Object.entries(ETHNICITY_IMAGES) as Array<[keyof typeof ETHNICITY_IMAGES, string]>).map(([key, url]) => {
           const labelMap: Record<string, string> = {
             white: 'Caucasian',
@@ -49,6 +49,7 @@ export default function Step3({ onNext, onBack }: Props) {
               selected={state.ethnicity === key}
               onClick={() => update({ ethnicity: key })}
               theme="purple"
+              square
             />
           );
         })}

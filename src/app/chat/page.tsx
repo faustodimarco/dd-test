@@ -5,6 +5,47 @@ import Image from 'next/image';
 import TypingIndicator from '@/app/lp/chat/_components/TypingIndicator';
 import MessageInput from './_components/MessageInput';
 
+// Persona name lookup (client-safe — no server-only imports needed)
+const PERSONA_NAMES: Record<string, string> = {
+  sofia: 'Sofia',
+  yuki: 'Yuki',
+  destiny: 'Destiny',
+  ashley: 'Ashley',
+  layla: 'Layla',
+};
+
+// All names available for @mention (used by autocomplete + renderer)
+const MENTION_NAMES = ['Sofia', 'Yuki', 'Destiny', 'Ashley', 'Layla'] as const;
+
+// If the user hasn't moved their cursor / keyboard / scrolled in this long,
+// pause spontaneous girl-to-girl chains. They resume as soon as activity returns.
+const IDLE_PAUSE_MS = 90_000;
+
+// Capturing-group split regex: any text "@Sofia" / "@layla" / etc. (case-insensitive)
+const MENTION_RENDER_RE = new RegExp(`(@(?:${MENTION_NAMES.join('|')})\\b)`, 'gi');
+
+function renderWithMentions(content: string, isUser: boolean): React.ReactNode[] {
+  const parts = content.split(MENTION_RENDER_RE);
+  return parts.map((part, i) => {
+    // split() with capturing group: even indexes = surrounding text, odd = match
+    if (i % 2 === 1) {
+      return (
+        <span
+          key={i}
+          className={
+            isUser
+              ? 'text-pink-100 font-bold'
+              : 'text-pink-400 font-bold'
+          }
+        >
+          {part}
+        </span>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 interface Message {
   id: number | string;
   role: 'user' | 'assistant';
@@ -25,8 +66,6 @@ interface Conversation {
   lastRole: string | null;
   updatedAt: number;
 }
-
-const AVATAR_META: Record<string, { name: string; avatar: string }> = {};
 
 function GroupAvatarStack({ avatars, isActive }: { avatars: string[]; isActive: boolean }) {
   const shown = avatars.slice(0, 4);
@@ -49,12 +88,9 @@ function GroupAvatarStack({ avatars, isActive }: { avatars: string[]; isActive: 
 function Bubble({ msg, isGroup, convos }: { msg: Message; isGroup?: boolean; convos: Conversation[] }) {
   const isHer = msg.role === 'assistant';
 
-  if (isGroup && msg.responderId && !AVATAR_META[msg.responderId]) {
-    const found = convos.find((c) => c.id === msg.responderId);
-    if (found) AVATAR_META[msg.responderId] = { name: found.name, avatar: found.avatar };
-  }
-
-  const displayMeta = isGroup && msg.responderId ? AVATAR_META[msg.responderId] : null;
+  const displayMeta = isGroup && msg.responderId
+    ? convos.find((c) => c.id === msg.responderId) ?? null
+    : null;
 
   return (
     <motion.div
@@ -75,7 +111,9 @@ function Bubble({ msg, isGroup, convos }: { msg: Message; isGroup?: boolean; con
           <p className="text-pink-400 text-[10px] font-bold mb-1 ml-1">{displayMeta.name}</p>
         )}
         <div className={`px-4 py-2.5 rounded-2xl ${isHer ? 'bg-[#1e1e2e] text-white rounded-tl-sm' : 'bg-pink-500 text-white rounded-tr-sm'}`}>
-          <p className="text-sm leading-relaxed">{msg.content}</p>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+            {renderWithMentions(msg.content, !isHer)}
+          </p>
           <p className={`text-[10px] mt-1 ${isHer ? 'text-gray-500' : 'text-pink-200'}`}>
             {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
@@ -121,22 +159,26 @@ function ChatWindow({
   convo,
   messages,
   typing,
+  openerTyping,
   onSend,
   onBack,
+  onReset,
   convos,
 }: {
   convo: Conversation;
   messages: Message[];
   typing: boolean;
+  openerTyping: boolean;
   onSend: (text: string) => void;
   onBack: () => void;
+  onReset: () => void;
   convos: Conversation[];
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, typing]);
+  }, [messages, typing, openerTyping]);
 
   return (
     <div className="flex flex-col h-full">
@@ -155,11 +197,20 @@ function ChatWindow({
         <div className="flex-1 min-w-0">
           <div className={`font-black text-sm ${convo.isGroup ? 'text-pink-300' : 'text-white'}`}>{convo.name}</div>
           <div className="text-green-400 text-[11px] font-medium">
-            {convo.isGroup ? '● All online — waiting for you' : '● Active now'}
+            {convo.isGroup ? '● All online — active' : '● Active now'}
           </div>
         </div>
-        <div className="text-pink-400 text-xs font-bold uppercase tracking-wide flex-shrink-0">
-          {convo.isGroup ? '🔥 Group' : 'AI'}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-pink-400 text-xs font-bold uppercase tracking-wide">
+            {convo.isGroup ? '🔥 Group' : 'AI'}
+          </span>
+          <button
+            onClick={onReset}
+            title="Reset chat"
+            className="text-gray-500 hover:text-red-400 transition-colors text-lg leading-none"
+          >
+            🗑
+          </button>
         </div>
       </div>
 
@@ -168,7 +219,7 @@ function ChatWindow({
           <Bubble key={msg.id} msg={msg} isGroup={convo.isGroup} convos={convos} />
         ))}
         <AnimatePresence>
-          {typing && (
+          {(typing || openerTyping) && (
             <motion.div
               key="typing"
               initial={{ opacity: 0, y: 6 }}
@@ -176,9 +227,13 @@ function ChatWindow({
               exit={{ opacity: 0 }}
               className="flex justify-start items-end gap-2"
             >
-              {convo.isGroup && convo.groupAvatars && (
+              {convo.isGroup && convo.groupAvatars ? (
                 <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-gray-700 flex-shrink-0">
                   <Image src={convo.groupAvatars[0]} alt="" width={28} height={28} className="object-cover" />
+                </div>
+              ) : (
+                <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-gray-700 flex-shrink-0">
+                  <Image src={convo.avatar} alt={convo.name} width={28} height={28} className="object-cover" />
                 </div>
               )}
               <div className="bg-[#1e1e2e] rounded-2xl rounded-tl-sm px-4 py-3">
@@ -190,7 +245,11 @@ function ChatWindow({
         <div ref={bottomRef} />
       </div>
 
-      <MessageInput onSend={onSend} disabled={typing} />
+      <MessageInput
+        onSend={onSend}
+        disabled={typing}
+        mentionableNames={convo.isGroup ? (MENTION_NAMES as readonly string[]) : undefined}
+      />
     </div>
   );
 }
@@ -218,7 +277,52 @@ export default function ChatPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [typing, setTyping] = useState(false);
+  const [openerTyping, setOpenerTyping] = useState(false);
   const [mobileShowChat, setMobileShowChat] = useState(false);
+
+  // Refs so background timer callbacks always see current values
+  const typingRef = useRef(false);
+  const openerTypingRef = useRef(false);
+  const activeIdRef = useRef<string | null>(null);
+  // Tracks the last time the user did anything in the window — used to pause
+  // spontaneous girl-to-girl chains when the user has gone idle.
+  // Initialised to 0; the activity listener primes it on mount.
+  const lastActivityRef = useRef<number>(0);
+
+  useEffect(() => { typingRef.current = typing; }, [typing]);
+  useEffect(() => { openerTypingRef.current = openerTyping; }, [openerTyping]);
+  useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
+
+  // ─── Activity tracking ─────────────────────────────────────────────────────
+  // Any mouse movement, key press, scroll, touch, or tab-focus counts as "still
+  // here." We use this to gate spontaneous chains in the background timer.
+  useEffect(() => {
+    const markActive = () => {
+      lastActivityRef.current = Date.now();
+    };
+    // Prime now — page just mounted, user is clearly here.
+    markActive();
+    const events: (keyof WindowEventMap)[] = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'touchmove',
+      'wheel',
+      'focus',
+    ];
+    events.forEach((ev) => window.addEventListener(ev, markActive, { passive: true }));
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') markActive();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, markActive));
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
 
   const activeConvo = convos.find((c) => c.id === activeId) ?? null;
   const activeMessages = activeId ? (messages[activeId] ?? []) : [];
@@ -230,6 +334,7 @@ export default function ChatPage() {
       .catch(console.error);
   }, []);
 
+  // ─── Opener sequence ────────────────────────────────────────────────────────
   const selectConvo = useCallback(async (id: string) => {
     setActiveId(id);
     setMobileShowChat(true);
@@ -237,23 +342,88 @@ export default function ChatPage() {
       try {
         const res = await fetch(`/api/conversations/${id}/messages`);
         const { messages: msgs } = await res.json();
-        setMessages((prev) => ({
-          ...prev,
-          [id]: (msgs as Array<{ id: number; role: 'user' | 'assistant'; content: string; created_at: number }>).map((m) => ({
-            id: m.id,
-            role: m.role,
-            content: m.content,
-            createdAt: m.created_at,
-          })),
+        const loaded = (
+          msgs as Array<{
+            id: number;
+            role: 'user' | 'assistant';
+            content: string;
+            responder_id: string | null;
+            created_at: number;
+          }>
+        ).map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          createdAt: m.created_at,
+          responderId: m.responder_id ?? undefined,
         }));
+        setMessages((prev) => ({ ...prev, [id]: loaded }));
+
+        if (loaded.length === 0) {
+          const isGroupConvo = convos.find((c) => c.id === id)?.isGroup ?? false;
+          const openerCount = isGroupConvo ? 3 : 1;
+
+          // Delay before first "typing" appears
+          setTimeout(async () => {
+            const excludedIds: string[] = [];
+            let lastResponderName: string | undefined;
+
+            for (let i = 0; i < openerCount; i++) {
+              if (i > 0) {
+                // Brief pause between each opener — feels like a different girl joining
+                setOpenerTyping(false);
+                await new Promise((r) => setTimeout(r, 1100 + Math.random() * 900));
+              }
+              setOpenerTyping(true);
+
+              try {
+                const opRes = await fetch('/api/chat', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    conversationId: id,
+                    message: '',
+                    isOpener: true,
+                    excludeResponderId: excludedIds.length > 0 ? excludedIds.join(',') : undefined,
+                    replyingToName: lastResponderName,
+                  }),
+                });
+                const { reply, responderId } = await opRes.json();
+
+                const opMsg: Message = {
+                  id: Date.now() + i,
+                  role: 'assistant',
+                  content: reply,
+                  createdAt: Date.now(),
+                  responderId,
+                };
+                setMessages((prev) => ({ ...prev, [id]: [...(prev[id] ?? []), opMsg] }));
+                setConvos((prev) =>
+                  prev.map((c) =>
+                    c.id === id ? { ...c, lastMessage: reply, lastRole: 'assistant' } : c
+                  )
+                );
+
+                excludedIds.push(responderId);
+                lastResponderName = PERSONA_NAMES[responderId] ?? responderId;
+              } catch (err) {
+                console.error(err);
+              }
+            }
+            setOpenerTyping(false);
+          }, 1500);
+        }
       } catch (err) {
         console.error(err);
       }
     }
-  }, [messages]);
+  }, [messages, convos]);
 
+  // ─── User sends a message ────────────────────────────────────────────────────
   const handleSend = useCallback(async (text: string) => {
     if (!activeId || typing) return;
+
+    const isGroup = activeConvo?.isGroup ?? false;
 
     const optimisticMsg: Message = {
       id: `opt-${Date.now()}`,
@@ -265,27 +435,52 @@ export default function ChatPage() {
     setTyping(true);
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId: activeId, message: text }),
-      });
-      const { reply, responderId } = await res.json();
+      // Variable response count for group: 1 girl (50%), 2 girls (35%), 3 girls (15%).
+      // Each pick is fully random — same girl may respond twice in a row.
+      const rand = Math.random();
+      const responseCount = isGroup ? (rand < 0.50 ? 1 : rand < 0.85 ? 2 : 3) : 1;
 
-      const aiMsg: Message = {
-        id: Date.now(),
-        role: 'assistant',
-        content: reply,
-        createdAt: Date.now(),
-        responderId,
-      };
+      let lastResponderName: string | undefined;
+      let lastReply = '';
 
-      setMessages((prev) => ({ ...prev, [activeId]: [...(prev[activeId] ?? []), aiMsg] }));
+      for (let i = 0; i < responseCount; i++) {
+        if (i > 0) {
+          // Natural pause before next message
+          await new Promise((r) => setTimeout(r, 700 + Math.random() * 700));
+        }
+
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: activeId,
+            message: text,
+            isFollowUp: i > 0,
+            replyingToName: i > 0 ? lastResponderName : undefined,
+          }),
+        });
+        const { reply, responderId } = await res.json();
+
+        const aiMsg: Message = {
+          id: Date.now() + i,
+          role: 'assistant',
+          content: reply,
+          createdAt: Date.now(),
+          responderId,
+        };
+        setMessages((prev) => ({
+          ...prev,
+          [activeId]: [...(prev[activeId] ?? []), aiMsg],
+        }));
+
+        lastResponderName = PERSONA_NAMES[responderId] ?? responderId;
+        lastReply = reply;
+      }
 
       setConvos((prev) =>
         prev.map((c) =>
           c.id === activeId
-            ? { ...c, lastMessage: reply, lastRole: 'assistant', updatedAt: Date.now() }
+            ? { ...c, lastMessage: lastReply, lastRole: 'assistant', updatedAt: Date.now() }
             : c
         )
       );
@@ -294,8 +489,131 @@ export default function ChatPage() {
     } finally {
       setTyping(false);
     }
-  }, [activeId, typing]);
+  }, [activeId, typing, activeConvo]);
 
+  // ─── Background spontaneous girl-to-girl chat (group only) ──────────────────
+  // Fires frequent multi-message chains so the chat feels alive between the
+  // user's turns. Girls actually talk TO each other by name, not just to him.
+  useEffect(() => {
+    const isGroup = activeConvo?.isGroup ?? false;
+    if (!activeId || !isGroup) return;
+
+    let cancelled = false;
+    let timerId: ReturnType<typeof setTimeout>;
+
+    const fireChain = async () => {
+      if (cancelled) return;
+
+      // Don't interrupt an active user response or opener — try again later
+      if (typingRef.current || openerTypingRef.current) {
+        schedule();
+        return;
+      }
+
+      // User has gone idle (90s+ no activity) OR tab is hidden — go quiet.
+      // Just keep rescheduling; chains resume as soon as the user comes back.
+      const idleMs = Date.now() - lastActivityRef.current;
+      const tabHidden = typeof document !== 'undefined' && document.hidden;
+      if (idleMs > IDLE_PAUSE_MS || tabHidden) {
+        schedule();
+        return;
+      }
+
+      const currentId = activeIdRef.current;
+      if (!currentId || cancelled) return;
+
+      // Chain length: 1 (25%), 2 (50%), 3 (25%) messages.
+      // Each pick is fully random — same girl can chain multiple messages,
+      // any girl can jump in, no enforced rotation.
+      const r = Math.random();
+      const chainLength = r < 0.25 ? 1 : r < 0.75 ? 2 : 3;
+
+      let lastResponderName: string | undefined;
+
+      try {
+        for (let i = 0; i < chainLength; i++) {
+          if (cancelled) return;
+          // Bail if user starts a response mid-chain (don't talk over him)
+          if (i > 0 && typingRef.current) break;
+          // Bail if user went idle / hid the tab mid-chain
+          if (i > 0 && (Date.now() - lastActivityRef.current > IDLE_PAUSE_MS || (typeof document !== 'undefined' && document.hidden))) break;
+
+          if (i > 0) {
+            await new Promise((res) => setTimeout(res, 900 + Math.random() * 1800));
+            if (cancelled) return;
+          }
+
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              conversationId: currentId,
+              message: '',
+              isGirlToGirl: true,
+              replyingToName: lastResponderName,
+            }),
+          });
+          if (cancelled) return;
+          const { reply, responderId } = await res.json();
+
+          setMessages((prev) => ({
+            ...prev,
+            [currentId]: [
+              ...(prev[currentId] ?? []),
+              {
+                id: Date.now() + i,
+                role: 'assistant' as const,
+                content: reply,
+                createdAt: Date.now(),
+                responderId,
+              },
+            ],
+          }));
+          setConvos((prev) =>
+            prev.map((c) =>
+              c.id === currentId
+                ? { ...c, lastMessage: reply, lastRole: 'assistant', updatedAt: Date.now() }
+                : c
+            )
+          );
+
+          lastResponderName = PERSONA_NAMES[responderId] ?? responderId;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      schedule();
+    };
+
+    const schedule = () => {
+      if (!cancelled) {
+        // Fire every 14–28s — feels like a real ongoing groupchat
+        const delay = 14000 + Math.random() * 14000;
+        timerId = setTimeout(fireChain, delay);
+      }
+    };
+
+    schedule();
+    return () => {
+      cancelled = true;
+      clearTimeout(timerId);
+    };
+  }, [activeId, activeConvo?.isGroup]); // recreate only when switching conversations
+
+  // ─── Reset ──────────────────────────────────────────────────────────────────
+  const handleReset = useCallback(async () => {
+    if (!activeId) return;
+    await fetch(`/api/conversations/${activeId}/messages`, { method: 'DELETE' });
+    setMessages((prev) => ({ ...prev, [activeId]: [] }));
+    setConvos((prev) =>
+      prev.map((c) =>
+        c.id === activeId ? { ...c, lastMessage: null, lastRole: null } : c
+      )
+    );
+  }, [activeId]);
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="h-screen flex flex-col bg-[#0D0D0D] overflow-hidden">
       <div className="flex-shrink-0 w-full bg-[#111] border-b border-pink-900/30 px-4 py-2.5 flex items-center justify-center gap-3 text-sm">
@@ -329,8 +647,10 @@ export default function ChatPage() {
               convo={activeConvo}
               messages={activeMessages}
               typing={typing}
+              openerTyping={openerTyping}
               onSend={handleSend}
               onBack={() => setMobileShowChat(false)}
+              onReset={handleReset}
               convos={convos}
             />
           ) : (

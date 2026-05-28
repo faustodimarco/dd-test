@@ -1,6 +1,6 @@
 const namesByEthnicity: Record<string, string[]> = {
   white: ['Scarlett Vixen', 'Britney Rose', 'Ashley Blaze', 'Kayla Storm', 'Tiffany Wilde'],
-  black: ['Destiny Rain', 'Jasmine Fire', 'Ebony Storm', 'Naomi Blaze', 'Simone Wilde'],
+  black: ['Destiny Rain', 'Jasmine Fire', 'Ebony Storm', 'Naomi Blaze', 'Diamond Wilde'],
   asian: ['Yuki Hana', 'Mei Lin', 'Sakura Storm', 'Akari Blaze', 'Nami Wilde'],
   latina: ['Sofia Fuego', 'Valentina Cruz', 'Isabella Storm', 'Camila Blaze', 'Daniela Wilde'],
   arab: ['Layla Nour', 'Yasmine Fire', 'Amira Storm', 'Nadia Blaze', 'Fatima Wilde'],

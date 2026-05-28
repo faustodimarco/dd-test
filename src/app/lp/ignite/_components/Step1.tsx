@@ -2,21 +2,23 @@
 import { motion } from 'framer-motion';
 import { useFunnelState } from '@/lib/useFunnelState';
 import { DEFAULT_FUNNEL_D, FunnelDState } from '@/lib/types';
+import { KINK_IMAGES } from '@/lib/assets';
 import ProgressPills from '@/components/ProgressPills';
+import PhotoCard from '@/components/PhotoCard';
 
 interface Props { onNext: () => void }
 
-const KINKS: { emoji: string; label: string }[] = [
-  { emoji: '🔗', label: 'BDSM' },
-  { emoji: '🍑', label: 'Anal' },
-  { emoji: '👑', label: 'Domination' },
-  { emoji: '🙏', label: 'Submission' },
-  { emoji: '✊', label: 'Fisting' },
-  { emoji: '🔥', label: 'Rough Sex' },
-  { emoji: '🦶', label: 'Feet' },
-  { emoji: '⛓️', label: 'Bondage' },
-  { emoji: '🤱', label: 'Breeding' },
-];
+const KINKS = [
+  'BDSM',
+  'Anal',
+  'Domination',
+  'Squirting',
+  'Deepthroat',
+  'Spanking',
+  'Feet',
+  'Choking',
+  'Creampie',
+] as const;
 
 export default function Step1({ onNext }: Props) {
   const { state, update, hydrated } = useFunnelState<FunnelDState>('funnel_d', DEFAULT_FUNNEL_D);
@@ -46,25 +48,19 @@ export default function Step1({ onNext }: Props) {
         Pick everything that applies. She&apos;ll be built around your desires.
       </p>
 
-      <div className="grid grid-cols-3 gap-2 w-full mb-8">
-        {KINKS.map(({ emoji, label }) => {
-          const selected = state.kinks.includes(label);
-          return (
-            <motion.button
-              key={label}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toggle(label)}
-              className={`flex flex-col items-center justify-center gap-1 rounded-xl py-3 px-2 border-2 transition-all duration-200 cursor-pointer ${
-                selected
-                  ? 'border-[#A020F0] bg-[#1a1a2e]'
-                  : 'border-gray-700 bg-[#1a1a2e] hover:border-gray-500'
-              }`}
-            >
-              <span className="text-xl">{emoji}</span>
-              <span className="text-white text-xs font-bold text-center leading-tight">{label}</span>
-            </motion.button>
-          );
-        })}
+      <div className="grid grid-cols-3 gap-2 w-full max-w-[576px] mx-auto mb-8">
+        {KINKS.map((label) => (
+          <PhotoCard
+            key={label}
+            src={KINK_IMAGES[label]}
+            alt={label}
+            label={label}
+            selected={state.kinks.includes(label)}
+            onClick={() => toggle(label)}
+            theme="purple"
+            square
+          />
+        ))}
       </div>
 
       <button
